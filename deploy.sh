@@ -46,6 +46,18 @@ fi
 echo -e " ${Y}构建 Docker 镜像...${N}"
 docker compose up -d --build 2>/dev/null || docker-compose up -d --build
 
+
+# Run setup wizard
+echo -e " ${Y}正在进入配置向导...${N}"
+echo -e " 按提示依次填写:"
+echo -e "  1. SMSBower / HeroSMS API Key"
+echo -e "  2. Sub2 面板配置"
+echo -e "  3. WARP VPN (可选)\n"
+
+docker exec -it gpt-registrar python3 deploy/menu.py 2>/dev/null || {
+    echo -e " ${Y}请手动执行: docker exec -it gpt-registrar python3 deploy/menu.py${N}"
+}
+
 echo -e "\n ${G}================================================${N}"
 echo -e " ${BLD}部署完成!${N}"
 echo -e " ${G}================================================${N}"
