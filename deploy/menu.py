@@ -183,158 +183,55 @@ def auto_set_warp_location(country_code):
         pass
 
 def action_setup_wizard():
-    Q=lambda t,d='':input(chr(27)+'[93m?'+chr(27)+'[0m '+t+((chr(27)+'[2m['+d+']'+chr(27)+'[0m')if d else '')+': ').strip()or d
-    S=lambda t:print(chr(10)+'  '+chr(27)+'[1m'+chr(27)+'[93m'+t+chr(27)+'[0m')
-    L=lambda:print('  '+chr(27)+'[96m'+'='*44+chr(27)+'[0m')
-    D=lambda t:print('  '+chr(27)+'[2m'+t+chr(27)+'[0m')
-    G=lambda t:print('  '+chr(27)+'[92m\u2714 '+t+chr(27)+'[0m')
-    W=lambda t:print('  '+chr(27)+'[93m\u26a0 '+t+chr(27)+'[0m')
-
-    S('首次配置向导 - 只需一次')
-    L()
-    S('步骤 1/4: 域名邮箱 + SMS 平台')
-    L()
-    print()
-    D('检查 zhidexiu.com 域名邮箱 Worker...')
-    import json,subprocess,requests as req
-    worker='https://zhidexiu-mail.ppu2812859729.workers.dev'
-    try:
-        r=req.get(worker+'/api/health',timeout=10)
-        if r.status_code==200:G('域名邮箱 Worker 在线')
-        else:W('Worker 异常: '+str(r.status_code))
-    except Exception as e:W('Worker 连接失败: '+str(e))
-
-    D('配置 SMS 接码平台...')
-    print()
-    f=BASE_DIR/'sms_providers_config.json'
-    j=json.loads(f.read_text(encoding='utf-8'))if f.exists()else{'sms_providers':{}}
-    pvs=j.setdefault('sms_providers',{})
-    if'smsbower'not in pvs:pvs['smsbower']={'enabled':True,'api_key':'','service_code':'dr','priority':1}
-    if'herosms'not in pvs:pvs['herosms']={'enabled':True,'api_key':'','service_code':'dr','priority':2}
-    for n in['smsbower','herosms']:
-        p=pvs[n];k=p.get('api_key','')
-        if k and len(k)>4 and chr(0x4f60)not in k:G(n+': 已配置')
-        else:
-            nk=Q('请输入 '+n+' API Key')
-            if nk:p['api_key']=nk
-            else:W(n+': 跳过')
-    cur=j.get('max_price',0.03)
-    inp=Q('最高单价 ($/SMS)',str(cur))
-    try:j['max_price']=abs(float(inp))if inp else cur
-    except:j['max_price']=cur
-    f.write_text(json.dumps(j,indent=2,ensure_ascii=False),encoding='utf-8')
-
-    print()
-    D('自动测试 SMS 连通性...')
-    any_ok=False
-    try:
-        from multi_sms_provider import SMSBowerProvider,HeroSMSProvider as HSP
-        for n,pv in pvs.items():
-            if not pv.get('api_key')or chr(0x4f60)in pv.get('api_key',''):continue
-            prov=SMSBowerProvider(pv['api_key'],pv.get('service_code','dr'))if n=='smsbower'else HSP(pv['api_key'],pv.get('service_code','dr'))
-            try:
-                bal=prov.get_balance()
-                if bal is not None:
-                    mp=j['max_price'];est=int(bal/mp)if mp>0 else 0
-                    G(n+' 连通成功! 余额: $'+str(round(bal,2))+' (约'+str(est)+'个)')
-                    any_ok=True
-                cl=prov.get_countries_with_prices()
+    header("首次配置向导")
+    print("海鸥检查配置...\n")
+    import json
+    f = BASE_DIR / "sms_providers_config.json"
+    if f.exists():
+        j = json.loads(f.read_text(encoding="utf-8"))
+        for n,p in j.get("sms_providers",{}).items():
+            k = p.get("api_key","")
+            if not k or "你的" in k:
+                nk = input("  请输入 " + n + " API Key: ").strip()
+                if nk: p["api_key"] = nk
+            else:
+                ok(n + " 已配置")
+        cur = j.get("max_price", 0.03)
+        inp = input("  最高单价 ($, 默认 $" + str(cur) + "): ").strip()
+        if inp:
+            try: j["max_price"] = abs(float(inp))
+            except: pass
+        f.write_text(json.dumps(j,indent=2,ensure_ascii=False),encoding="utf-8")
+        try:
+            from multi_sms_provider import HeroSMSProvider, SMSBowerProvider
+            for n,p in j.get("sms_providers",{}).items():
+                if not p.get("api_key"): continue
+                if n == "smsbower":
+                    prov = SMSBowerProvider(p["api_key"], p.get("service_code","dr"))
+                else:
+                    prov = HeroSMSProvider(p["api_key"], p.get("service_code","dr"))
+                cl = prov.get_countries_with_prices()
                 if cl:
-                    cheap=[c for c in cl if c['price']<=j['max_price']]
+                    mp = float(j.get("max_price", 0.03))
+                    cheap = [c for c in cl if c["price"] <= mp]
                     if cheap:
-                        os.environ['SMS_COUNTRY']=cheap[0]['code']
-                        print('  最便宜: 代码'+cheap[0]['code']+' $'+str(cheap[0]['price'])+'/次')
-            except Exception as e:W(n+' 测试失败: '+str(e))
-    except:pass
-
-    if not any_ok:
-        W('没有可用的 SMS 平台')
-        input('  '+chr(27)+'[2m按 Enter 返回...'+chr(27)+'[0m')
-        return
-
+                        c0 = cheap[0]
+                        print("  最便宜国家: " + c0["code"] + " - $" + str(c0["price"]))
+                        os.environ["SMS_COUNTRY"] = c0["code"]
+                        break
+        except:
+            pass
+    s2 = BASE_DIR / "sub2_config.json"
+    if s2.exists():
+        try:
+            d = json.loads(s2.read_text(encoding="utf-8")).get("sub2api",{})
+            if d.get("url"):
+                ok("Sub2: " + d["url"] + " / " + d.get("default_group","?"))
+        except:
+            pass
     print()
-    S('选择接码国家')
-    D('注册成功的国家会自动匹配 IP 地区')
-    try:
-        found=[]
-        for n,pv in pvs.items():
-            if not pv.get('api_key')or chr(0x4f60)in pv.get('api_key',''):continue
-            prov=SMSBowerProvider(pv['api_key'],pv.get('service_code','dr'))if n=='smsbower'else HSP(pv['api_key'],pv.get('service_code','dr'))
-            cl=prov.get_countries_with_prices()
-            if cl:found=[c for c in cl if c['price']<=j['max_price']][:15];break
-        if found:
-            print()
-            for i,c in enumerate(found,1):
-                tag=chr(27)+'[92m\u2714'+chr(27)+'[0m'if i==1 else''
-                print('  '+str(i).rjust(2)+'. '+c['code'].rjust(4)+'  $'+str(c['price'])+tag)
-            sel=Q('选择编号','1').strip()
-            if sel and sel.isdigit():
-                idx=int(sel)-1
-                if 0<=idx<len(found):os.environ['SMS_COUNTRY']=found[idx]['code']
-        else:print('  无可用国家')
-    except:pass
-    input(chr(10)+'  '+chr(27)+'[2m按 Enter 继续...'+chr(27)+'[0m')
-
-    S('步骤 2/4: Sub2 面板 (可选)')
-    L()
-    D('注册完自动上传 Token 到 Sub2')
-    print()
-    s2f=BASE_DIR/'sub2_config.json'
-    s2=json.loads(s2f.read_text(encoding='utf-8')).get('sub2api',{})if s2f.exists()else{}
-    if s2.get('url'):G('已配置: '+s2.get('url','?'))
-    if Q('更改','n').lower()=='y' or not s2.get('url'):
-        if not s2.get('url'):
-            u=Q('Sub2 地址')
-            if u:
-                e=Q('管理员邮箱')
-                pw=Q('密码')
-                g=Q('分组名','chatgpt1')or'chatgpt1'
-                s2={'url':u,'email':e,'password':pw,'default_group':g}
-                s2f.write_text(json.dumps({'sub2api':s2},indent=2,ensure_ascii=False),encoding='utf-8')
-    input(chr(10)+'  '+chr(27)+'[2m按 Enter 继续...'+chr(27)+'[0m')
-
-    S('步骤 3/4: WARP VPN (可选)')
-    L()
-    D('WARP 提供干净 IP')
-    uw=Q('安装并启动 WARP','n').lower()
-    if uw=='y':
-        D('正在安装 WARP (约1分钟)...')
-        ret=subprocess.run(['bash',str(DEPLOY_DIR/'install_warp.sh')])
-        if ret.returncode==0:
-            G('WARP 安装成功')
-            D('正在启动代理模式...')
-            subprocess.run(['warp-cli','set-mode','proxy'],timeout=10)
-            subprocess.run(['warp-cli','registration','new'],timeout=10)
-            D('正在连接 WARP 网络...')
-            r2=subprocess.run(['warp-cli','connect'],timeout=15)
-            if r2.returncode==0:os.environ['WARP_PROXY']='socks5://127.0.0.1:40000';G('WARP 连接成功')
-            else:W('WARP 连接失败')
-        else:W('WARP 安装失败')
-    input(chr(10)+'  '+chr(27)+'[2m按 Enter 继续...'+chr(27)+'[0m')
-
-    S('配置完成 - 自动开始注册')
-    L()
-    print('  '+chr(27)+'[92m邮箱'+chr(27)+'[0m '+chr(27)+'[2m\u2192'+chr(27)+'[0m zhidexiu.com')
-    print('  '+chr(27)+'[92mSMS'+chr(27)+'[0m  '+chr(27)+'[2m\u2192'+chr(27)+'[0m 最高\$'+str(j.get('max_price',0.03)))
-    print('  '+chr(27)+'[92mSub2'+chr(27)+'[0m '+chr(27)+'[2m\u2192'+chr(27)+'[0m '+(s2.get('url','未配置')if s2 else'未配置'))
-    print('  '+chr(27)+'[92mWARP'+chr(27)+'[0m '+chr(27)+'[2m\u2192'+chr(27)+'[0m '+('已启用'if uw=='y' else'未启用'))
-    print()
-    n=Q('注册数量','5')
-    os.environ['BATCH_COUNT']=str(int(n))
-    os.environ['SUB2_URL']=s2.get('url','')if s2 else''
-    os.environ['SUB2_GROUP']=s2.get('default_group','')if s2 else''
-    os.environ['SUB2_EMAIL']=s2.get('email','')if s2 else''
-    os.environ['SUB2_PASSWORD']=s2.get('password','')if s2 else''
-    os.environ['WARP_ROTATE']='5'
-    print()
-    D('自动开始批量注册 + Sub2上传...')
-    try:
-        from batch_register_and_upload import main as batch_main
-        batch_main()
-    except Exception as e:W('注册失败: '+str(e))
-    G('下次直接按 1 批量注册')
-    input(chr(10)+'  '+chr(27)+'[2m按 Enter 返回...'+chr(27)+'[0m')
-
+    ok("配置完成，可以开始注册了")
+    press()
 
 def action_batch_register():
     header("批量注册 ChatGPT 账号")
