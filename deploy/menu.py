@@ -711,7 +711,7 @@ def main():
         "8": ("配置管理", action_config),
         "9": ("环境检查", lambda: (header("环境检查"), check_env(), press())),
         "w": ("WARP VPN 管理", action_warp),
-        "0": ("退出 / Shell", action_shell),
+        "0": ("退出", lambda:exit(0)),
     }
 
     try:
