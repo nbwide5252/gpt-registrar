@@ -680,6 +680,20 @@ def action_warp():
         except KeyboardInterrupt: break
         except Exception as e: err(str(e))
 
+
+def action_shell():
+    header('Shell mode')
+    os.chdir(str(BASE_DIR))
+    while True:
+        try:
+            cmd = input(' gpt> ').strip()
+            if cmd.lower() in ('exit','quit','q','back'):
+                break
+            if not cmd: continue
+            subprocess.run(cmd, shell=True)
+        except KeyboardInterrupt: break
+        except Exception as e: err(str(e))
+
 def show_banner():
     tok_count = len(list(TOKENS_DIR.glob("*.json"))) if TOKENS_DIR.exists() else 0
     cfg = load_env()
