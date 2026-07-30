@@ -583,6 +583,21 @@ def action_config():
             press()
         elif sel == "0": break
 
+def action_upgrade():
+    header(chr(21319)+chr(32423)+chr(26356)+chr(26032))
+    import subprocess as sp
+    sp.run([chr(98)+chr(97)+chr(115)+chr(104),str(DEPLOY_DIR/chr(117)+chr(112)+chr(103)+chr(114)+chr(97)+chr(100)+chr(101)+chr(46)+chr(115)+chr(104))],timeout=120)
+    ok(chr(24050)+chr(26356)+chr(26032))
+    press()
+
+def action_uninstall():
+    header(chr(21368)+chr(36733)+chr(28165)+chr(38500))
+    warn(chr(23558)+chr(21024)+chr(38500)+chr(23481)+chr(22120)+chr(12289)+chr(38236)+chr(20687)+chr(21644)+chr(39033)+chr(30446)+chr(30446)+chr(24405))
+    ch=input(chr(32)*2+chr(30830)+chr(35748)+chr(21368)+chr(36733)+chr(63)+chr(32)+chr(91)+chr(121)+chr(47)+chr(78)+chr(93)+chr(58)+chr(32)).strip().lower()
+    if ch==chr(121):
+        sp=__import__(chr(115)+chr(117)+chr(98)+chr(112)+chr(114)+chr(111)+chr(99)+chr(101)+chr(115)+chr(115));sp.run([chr(98)+chr(97)+chr(115)+chr(104),str(DEPLOY_DIR/chr(117)+chr(110)+chr(105)+chr(110)+chr(115)+chr(116)+chr(97)+chr(108)+chr(108)+chr(46)+chr(115)+chr(104))],timeout=60);warn(chr(24050)+chr(21368)+chr(36733))
+    press()
+
 def action_warp():
     """WARP 管理"""
     while True:
