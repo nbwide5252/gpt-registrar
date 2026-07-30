@@ -44,7 +44,7 @@ fi
 
 # Build and run
 echo -e " ${Y}构建 Docker 镜像...${N}"
-docker compose up -d --build
+docker compose up -d --build 2>/dev/null || docker-compose up -d --build
 
 echo -e "\n ${G}================================================${N}"
 echo -e " ${BLD}部署完成!${N}"
