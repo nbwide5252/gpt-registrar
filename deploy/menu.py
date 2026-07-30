@@ -183,7 +183,7 @@ def auto_set_warp_location(country_code):
         pass
 
 def action_setup_wizard():
-    def Q(t,d=None):(chr(27)+'[93m?'+chr(27)+'[0m '+t+((chr(27)+'[2m['+d+']'+chr(27)+'[0m')if d else '')+': ').strip()or d
+    Q=lambda t,d='':input(chr(27)+'[93m?'+chr(27)+'[0m '+t+((chr(27)+'[2m['+d+']'+chr(27)+'[0m')if d else '')+': ').strip()or d
     S=lambda t:print(chr(10)+'  '+chr(27)+'[1m'+chr(27)+'[93m'+t+chr(27)+'[0m')
     L=lambda:print('  '+chr(27)+'[96m'+'='*44+chr(27)+'[0m')
     D=lambda t:print('  '+chr(27)+'[2m'+t+chr(27)+'[0m')
@@ -729,7 +729,7 @@ def main():
         "8": ("配置管理", action_config),
         "9": ("环境检查", lambda: (header("环境检查"), check_env(), press())),
         "w": ("WARP VPN 管理", action_warp),
-        "0": ("退出", lambda: exit(0)),
+        "0": ("退出 / Shell", action_shell),
     }
 
     try:
