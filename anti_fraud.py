@@ -1,99 +1,72 @@
-from curl_cffi.requests import AsyncSession, Session
-import random as _random_obj
+import os,json,time,random as _r
+from datetime import datetime
 
-class AntiFraud:
+class AntiDetect:
+    _PROFILES = [
+        {'ua':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15','imp':'safari17_0','screen':'1728x1117','lang':'en-US,en;q=0.9','platform':'MacIntel'},
+        {'ua':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Safari/605.1.15','imp':'safari16_0','screen':'1512x982','lang':'en-US,en;q=0.9,zh-CN;q=0.8','platform':'MacIntel'},
+        {'ua':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36','imp':'chrome124','screen':'1920x1080','lang':'en-US,en;q=0.9','platform':'Win32'},
+        {'ua':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36','imp':'chrome126','screen':'2560x1440','lang':'en-GB,en;q=0.9','platform':'Win32'},
+        {'ua':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36','imp':'chrome125','screen':'1920x1080','lang':'en-US,en;q=0.9,ja;q=0.8','platform':'Linux x86_64'},
+    ]
+
     @staticmethod
-    def random_headers(base_ua=''):
-        import random as _r
-        ua=base_ua or AntiFraud._SAFARI[0]['ua']
+    def random_profile():
+        p=_r.choice(AntiDetect._PROFILES)
+        w,h=map(int,p['screen'].split('x'))
         return {
-            'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Language':_r.choice(['en-US,en;q=0.9','en-GB,en;q=0.9','en-US,en;q=0.9,zh-CN;q=0.8','en;q=0.9']),
-            'Accept-Encoding':'gzip, deflate, br',
-            'Cache-Control':'no-cache',
-            'Pragma':'no-cache',
-            'Sec-Fetch-Dest':'document',
-            'Sec-Fetch-Mode':'navigate',
-            'Sec-Fetch-Site':'none',
-            'Sec-Fetch-User':'?1',
-            'Upgrade-Insecure-Requests':'1',
-            'User-Agent':ua,
+            'impersonate':p['imp'],'user_agent':p['ua'],
+            'screen':p['screen'],'viewport_width':w,'viewport_height':h,
+            'lang':p['lang'].split(',')[0],'lang_full':p['lang'],
+            'platform':p['platform'],'sec_ch_ua':'',
+            'sec_ch_ua_platform':'','sec_ch_ua_mobile':''
         }
 
     @staticmethod
-    def referer_chain(url):
-        import random as _r,urllib.parse as _up
-        sources=['https://www.google.com/search?q=chatgpt','https://www.bing.com/search?q=openai+register',
-                 'https://duckduckgo.com/?q=chatgpt+signup','https://www.google.com/']
-        parsed=_up.urlparse(url)
-        return {'Referer':_r.choice(sources),'Origin':f'{parsed.scheme}://{parsed.netloc}'}
+    def human_delay(fast=False):
+        import time,math
+        if fast:mu,sigma=0.5,0.3
+        else:mu,sigma=2.0,1.0
+        t=max(0.2,abs(_r.lognormvariate(mu,sigma)))
+        return t
 
     @staticmethod
-    def random_viewport():
-        import random as _r
-        w=_r.choice([1440,1512,1680,1728,1920,2560])
-        h=_r.choice([900,982,1050,1080,1117,1440])
-        dpr=_r.choice([1,2])
-        return f'{w}x{h}',dpr
+    def referer_chain(step):
+        chain={
+            'init':'https://www.google.com/',
+            'login':'https://chatgpt.com/auth/login',
+            'signup':'https://auth.openai.com/create-account',
+            'verify':'https://auth.openai.com/email-verification',
+            'phone':'https://auth.openai.com/add-phone',
+            'complete':'https://auth.openai.com/authorize'
+        }
+        return chain.get(step,'https://auth.openai.com/')
 
     @staticmethod
-    def session_warmup(session,url='https://www.google.com'):
-        try:
-            session.get(url,timeout=10,allow_redirects=True)
-        except:pass
-
-    _SAFARI = [
-        {'ua':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.3 Safari/605.1.15','imp':'safari15_3'},
-        {'ua':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.5 Safari/605.1.15','imp':'safari15_5'},
-        {'ua':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Safari/605.1.15','imp':'safari16_0'},
-        {'ua':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15','imp':'safari17_0'},
-    ]
-    _SCREENS=['1440x900','1512x982','1728x1117','2560x1440','1920x1080']
-    _LANGS=['en-US,en;q=0.9','en-US,en;q=0.9,zh-CN;q=0.8','en-GB,en;q=0.9','en-US,en;q=0.9,ja;q=0.8']
-
-    @staticmethod
-    def delay(min_s=0.5,max_s=3.0):
-        import asyncio,time
-        t=_random_obj.uniform(min_s,max_s)
-        def sync_delay():time.sleep(t)
-        async def async_delay():await asyncio.sleep(t)
-        return sync_delay,async_delay,t
+    def ordered_headers(fp,step):
+        return {
+            'User-Agent':fp['user_agent'],
+            'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language':fp['lang_full'],
+            'Accept-Encoding':'gzip, deflate, br',
+            'Referer':AntiDetect.referer_chain(step),
+            'Origin':'https://auth.openai.com',
+            'DNT':'1',
+            'Connection':'keep-alive',
+            'Sec-Fetch-Dest':'empty',
+            'Sec-Fetch-Mode':'cors',
+            'Sec-Fetch-Site':'same-origin',
+        }
 
     @staticmethod
-    def random_fingerprint():
-        s=_random_obj.choice(AntiFraud._SAFARI)
-        sc=_random_obj.choice(AntiFraud._SCREENS)
-        l=_random_obj.choice(AntiFraud._LANGS)
-        return {'impersonate':s['imp'],'user_agent':s['ua'],'screen':sc,'lang':l.split(',')[0],'lang_full':l,'sec_ch_ua':'','sec_ch_ua_platform':'','sec_ch_ua_mobile':''}
-
-    @staticmethod
-    def lock_ip():
-        import os
-        os.environ['WARP_LOCK']='1'
-        return'IP locked for this session'
-
-    @staticmethod
-    def unlock_ip():
-        import os
-        os.environ['WARP_LOCK']=''
-        return'IP unlocked'
-
-    @staticmethod
-    def warmup_session(session,email):
-        try:
-            import asyncio
-            async def _warm():
-                await asyncio.sleep(_random_obj.uniform(5,15))
-                try:
-                    r=await session.get('https://chatgpt.com/',timeout=15,allow_redirects=True)
-                    if r.status_code==200:
-                        pass
-                except:pass
-            try:
-                loop=asyncio.get_event_loop()
-                if loop.is_running():
-                    loop.create_task(_warm())
-                else:
-                    asyncio.run(_warm())
-            except:pass
-        except:pass
+    def fingerprint_headers(fp):
+        import base64,hashlib
+        return {
+            'User-Agent':fp['user_agent'],
+            'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language':fp['lang_full'],
+            'Accept-Encoding':'gzip, deflate, br',
+            'DNT':'1',
+            'Upgrade-Insecure-Requests':'1',
+            'Cache-Control':'max-age=0',
+        }
