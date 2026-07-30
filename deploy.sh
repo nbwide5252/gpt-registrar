@@ -17,7 +17,9 @@ if [ -d $INSTALL_DIR/.git ]; then
     L=$(git rev-parse HEAD);R=$(git rev-parse origin/main)
     if [ "$L" != "$R" ]; then
         echo Upgrading...
-        git checkout . 2>/dev/null;git pull origin main
+        git reset --hard origin/main 2>/dev/null
+git clean -fd 2>/dev/null
+git pull origin main
         docker compose down 2>/dev/null;docker compose up -d --build 2>/dev/null || docker-compose up -d --build
         echo Upgraded to $(cat VERSION)
     else
