@@ -45,7 +45,7 @@ class SmartRotator:
                     idx=valid.index(self.current)
                     self.current=valid[(idx+1)%len(valid)]
                 return self.current
-        if time.time()-self.switch_time>3600 or not self.current:
+        if time.time()-self.switch_time>600 or not self.current:
             if self.current and self.current in codes:
                 idx=codes.index(self.current)
                 self.current=codes[(idx+1)%len(codes)]
@@ -98,7 +98,7 @@ class WarpRotator:
     def __init__(self):self.last=0
     def rotate(self,force=False):
         now=time.time()
-        if force or now-self.last>3600:
+        if force or now-self.last>600:
             import subprocess as sp
             try:sp.run(['warp-cli','disconnect'],timeout=10,capture_output=True);time.sleep(2);sp.run(['warp-cli','connect'],timeout=15,capture_output=True)
             except:pass
