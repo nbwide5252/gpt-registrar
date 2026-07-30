@@ -718,6 +718,19 @@ def main():
         "0": ("退出 / Shell", action_shell),
     }
 
+    try:
+        import json
+        need=True
+        ff=BASE_DIR/'sms_providers_config.json'
+        if ff.exists():
+            jj=json.loads(ff.read_text())
+            for pp in jj.get('sms_providers',{}).values():
+                kk=pp.get('api_key','')
+                if kk and len(kk)>4:need=False;break
+        if need:
+            action_setup_wizard()
+    except:pass
+
     while True:
         show_banner()
         for title, keys in menu_items:
