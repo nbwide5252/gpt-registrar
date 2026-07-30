@@ -183,7 +183,7 @@ def auto_set_warp_location(country_code):
         pass
 
 def action_setup_wizard():
-    Q=lambda t,d='':input(chr(27)+'[93m?'+chr(27)+'[0m '+t+((chr(27)+'[2m['+d+']'+chr(27)+'[0m')if d else '')+': ').strip()or d
+    def Q(t,d=None):(chr(27)+'[93m?'+chr(27)+'[0m '+t+((chr(27)+'[2m['+d+']'+chr(27)+'[0m')if d else '')+': ').strip()or d
     S=lambda t:print(chr(10)+'  '+chr(27)+'[1m'+chr(27)+'[93m'+t+chr(27)+'[0m')
     L=lambda:print('  '+chr(27)+'[96m'+'='*44+chr(27)+'[0m')
     D=lambda t:print('  '+chr(27)+'[2m'+t+chr(27)+'[0m')
