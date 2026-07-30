@@ -1,44 +1,33 @@
-# GPT 自动注册机 - Docker VPS 版
+# GPT Registrator v3.0
 
-## 前提条件
-- VPS 已安装 Docker 和 docker-compose
-- zhidexiu.com 域名邮箱 Worker 已部署
-- HeroSMS / SMSBower API Key
+ChatGPT 自动注册机 - VPS Docker 一键部署
 
-## 快速启动
+## 功能
+- 域名邮箱收验证码（Cloudflare Worker）
+- SMSBower / HeroSMS 双平台接码
+- 完整注册流程 + Token 获取
+- 自动上传 Sub2 面板
+- 防风控（指纹轮换 + 随机延迟）
+- WARP IP 轮换（10分钟）
 
-bash
-# 传到 VPS
-scp -r gpt-vps root@你的VPS:/opt/gpt-registrar
-
-# SSH 登录 VPS
-cd /opt/gpt-registrar
-
-# 编辑 SMS Key
-nano sms_providers_config.json
-
-# 构建并启动
-docker compose up -d
-
-# 进入菜单
-docker exec -it gpt-registrar python3 deploy/menu.py
-
-
-## 菜单功能
-`
- 1. 批量注册 ChatGPT 账号   - 自动上传 Sub2
- 2. 单次注册               - 可选手动上传
- 3. 恢复已有 Token
- 4. 上传 Token 到 Sub2
- 5. 账号健康检查
- 6. SMS 余额查询
- w. WARP VPN 管理          - 容器内不影响宿主机
- 8. 配置管理
- 9. 环境检查
+## 一键部署
+`ash
+bash <(curl -fsSL https://raw.githubusercontent.com/nbwide5252/gpt-registrar/main/deploy.sh)
 `
 
-## 目录说明
-- outputs/tokens/  - Token 文件（宿主机可读）
-- logs/           - 日志
-- sms_providers_config.json - SMS 配置
-- sub2_config.json - Sub2 配置
+## 快捷命令
+| 命令 | 说明 |
+|------|------|
+| gpt | 打开菜单 |
+| gpt batch 10 | 批量注册10个 |
+| gpt status | 容器状态 |
+| gpt balance | SMS余额 |
+| gpt stats | Token统计 |
+
+## 配置向导
+首次运行自动弹出5步引导：SMS → 邮箱 → 国家 → 数量 → Sub2
+
+## 卸载
+`ash
+bash <(curl -fsSL https://raw.githubusercontent.com/nbwide5252/gpt-registrar/main/uninstall.sh)
+`
