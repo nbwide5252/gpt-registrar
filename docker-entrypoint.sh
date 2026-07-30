@@ -17,11 +17,11 @@ if command -v warp-cli &>/dev/null; then
     sleep 3
     warp-cli set-mode proxy 2>/dev/null || true
     warp-cli registration new 2>/dev/null && echo [WARP] 注册成功 || echo [WARP] 已注册过
-    warp-cli connect 2>/dev/null
+    warp-cli connect 2>/dev/null || true
     sleep 2
     export WARP_PROXY=socks5://127.0.0.1:40000
     echo [WARP] 代理已启动
 fi
 
-python3 deploy/menu.py
+python3 deploy/menu.py || true
 warp-cli disconnect 2>/dev/null || true
