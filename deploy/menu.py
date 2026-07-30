@@ -184,54 +184,118 @@ def auto_set_warp_location(country_code):
 
 def action_setup_wizard():
     header("首次配置向导")
-    print("海鸥检查配置...\n")
-    import json
+
+    header("步骤 1/4: SMS 接码平台")
+    print("  OpenAI 注册需要手机验证，需要接码平台的 API Key")
+    print()
+    import json, subprocess
     f = BASE_DIR / "sms_providers_config.json"
-    if f.exists():
-        j = json.loads(f.read_text(encoding="utf-8"))
-        for n,p in j.get("sms_providers",{}).items():
-            k = p.get("api_key","")
-            if not k or "你的" in k:
-                nk = input("  请输入 " + n + " API Key: ").strip()
-                if nk: p["api_key"] = nk
-            else:
-                ok(n + " 已配置")
-        cur = j.get("max_price", 0.03)
-        inp = input("  最高单价 ($, 默认 $" + str(cur) + "): ").strip()
-        if inp:
-            try: j["max_price"] = abs(float(inp))
-            except: pass
-        f.write_text(json.dumps(j,indent=2,ensure_ascii=False),encoding="utf-8")
-        try:
-            from multi_sms_provider import HeroSMSProvider, SMSBowerProvider
-            for n,p in j.get("sms_providers",{}).items():
-                if not p.get("api_key"): continue
-                if n == "smsbower":
-                    prov = SMSBowerProvider(p["api_key"], p.get("service_code","dr"))
-                else:
-                    prov = HeroSMSProvider(p["api_key"], p.get("service_code","dr"))
+    j = json.loads(f.read_text(encoding="utf-8")) if f.exists() else {"sms_providers": {}}
+    pvs = j.setdefault("sms_providers", {})
+    if "smsbower" not in pvs: pvs["smsbower"] = {"enabled": True, "api_key": "", "service_code": "dr", "priority": 1}
+    if "herosms" not in pvs: pvs["herosms"] = {"enabled": True, "api_key": "", "service_code": "dr", "priority": 2}
+
+    for name in ["smsbower", "herosms"]:
+        p = pvs[name]
+        k = p.get("api_key", "")
+        if k and "你的" not in k and len(k) > 4:
+            ok(name + ": 已配置")
+        else:
+            print("  " + name + ": 需要填写 API Key")
+            nk = input("  请输入 " + name + " API Key (回车跳过): ").strip()
+            if nk: p["api_key"] = nk
+
+    cur = j.get("max_price", 0.03)
+    inp = input("  最高单价 ($/SMS, 默认 " + str(cur) + "): ").strip()
+    try: j["max_price"] = abs(float(inp)) if inp else cur
+    except: j["max_price"] = cur
+    f.write_text(json.dumps(j, indent=2, ensure_ascii=False), encoding="utf-8")
+
+    print()
+    print("  查询余额和可用国家...")
+    try:
+        from multi_sms_provider import SMSBowerProvider, HeroSMSProvider as HSP
+        for n, pv in pvs.items():
+            if not pv.get("api_key") or "你的" in pv.get("api_key", ""): continue
+            prov = SMSBowerProvider(pv["api_key"], pv.get("service_code","dr")) if n=="smsbower" else HSP(pv["api_key"], pv.get("service_code","dr"))
+            try:
+                bal = prov.get_balance()
+                if bal is not None:
+                    mp = j["max_price"]
+                    print("  " + n + " 余额: $" + str(round(bal,2)) + " (约" + str(int(bal/mp) if mp>0 else 0) + "个)")
                 cl = prov.get_countries_with_prices()
                 if cl:
-                    mp = float(j.get("max_price", 0.03))
-                    cheap = [c for c in cl if c["price"] <= mp]
+                    cheap = [c for c in cl if c["price"] <= j["max_price"]]
                     if cheap:
-                        c0 = cheap[0]
-                        print("  最便宜国家: " + c0["code"] + " - $" + str(c0["price"]))
-                        os.environ["SMS_COUNTRY"] = c0["code"]
-                        break
-        except:
-            pass
-    s2 = BASE_DIR / "sub2_config.json"
-    if s2.exists():
-        try:
-            d = json.loads(s2.read_text(encoding="utf-8")).get("sub2api",{})
-            if d.get("url"):
-                ok("Sub2: " + d["url"] + " / " + d.get("default_group","?"))
-        except:
-            pass
-    print()
-    ok("配置完成，可以开始注册了")
+                        os.environ["SMS_COUNTRY"] = cheap[0]["code"]
+                        print("  最便宜: 代码" + cheap[0]["code"] + " $" + str(cheap[0]["price"]) + "/次")
+            except: pass
+    except: pass
     press()
+
+    header("步骤 2/4: Sub2 面板 (可选)")
+    print("  如果有 Sub2 面板，注册完自动上传 Token")
+    print()
+    s2f = BASE_DIR / "sub2_config.json"
+    s2 = json.loads(s2f.read_text(encoding="utf-8")).get("sub2api", {}) if s2f.exists() else {}
+    if s2.get("url"):
+        print("  已配置: " + s2.get("url","?"))
+        if input("  更改? [y/N]: ").strip().lower() == "y": s2 = {}
+    if not s2.get("url"):
+        u = input("  Sub2 地址: ").strip()
+        if u:
+            e = input("  管理员邮箱: ").strip()
+            pw = input("  密码: ").strip()
+            g = input("  分组名 [chatgpt1]: ").strip() or "chatgpt1"
+            s2 = {"url": u, "email": e, "password": pw, "default_group": g}
+            s2f.write_text(json.dumps({"sub2api": s2}, indent=2, ensure_ascii=False), encoding="utf-8")
+    press()
+
+    header("步骤 3/4: WARP VPN (可选)")
+    print("  WARP 提供干净 IP，避免 VPS 机房 IP 被 OpenAI 封")
+    uw = input("  安装并启动 WARP? [y/N]: ").strip().lower()
+    if uw == "y":
+        print("  正在安装 WARP (约1分钟)...")
+        ret = subprocess.run(["bash", str(DEPLOY_DIR / "install_warp.sh")])
+        if ret.returncode == 0:
+            ok("WARP 安装成功")
+            print("  正在启动代理模式...")
+            subprocess.run(["warp-cli", "set-mode", "proxy"], timeout=10)
+            subprocess.run(["warp-cli", "registration", "new"], timeout=10)
+            print("  正在连接 WARP 网络...")
+            r2 = subprocess.run(["warp-cli", "connect"], timeout=15)
+            if r2.returncode == 0:
+                os.environ["WARP_PROXY"] = "socks5://127.0.0.1:40000"
+                ok("WARP 连接成功")
+            else:
+                warn("WARP 连接失败，注册将使用VPS直连")
+        else:
+            warn("WARP 安装失败，可在WARP管理中重试")
+    press()
+
+    header("配置完成")
+    na = "未配置"
+    print("  SMS: 最高 $" + str(j.get("max_price",0.03)))
+    print("  Sub2: " + (s2.get("url",na) if s2 else na))
+    print("  WARP: " + ("已启用" if uw=="y" else na))
+    print()
+    if input("  现在开始注册? [Y/n]: ").strip().lower() in ("","y","yes"):
+        n = input("  注册数量 [5]: ").strip() or "5"
+        os.environ["BATCH_COUNT"] = n
+        os.environ["SUB2_URL"] = s2.get("url","") if s2 else ""
+        os.environ["SUB2_GROUP"] = s2.get("default_group","") if s2 else ""
+        os.environ["SUB2_EMAIL"] = s2.get("email","") if s2 else ""
+        os.environ["SUB2_PASSWORD"] = s2.get("password","") if s2 else ""
+        os.environ["WARP_ROTATE"] = "5"
+        try:
+            from batch_register_and_upload import main as batch_main
+            batch_main()
+        except Exception as e:
+            err("注册失败: " + str(e))
+    print()
+    ok("下次直接按1批量注册")
+    press()
+
 
 def action_batch_register():
     header("批量注册 ChatGPT 账号")
