@@ -11,7 +11,7 @@ os.environ["MAIL_PROVIDER"] = MAIL_PROVIDER
 os.environ["CF_MAIL_DOMAIN"] = CF_MAIL_DOMAIN
 os.environ["CF_MAIL_API_URL"] = CF_MAIL_API_URL
 
-HEROSMS_API_KEY = "f5ebbcdA48f70A3d3950631A44ce9b5e"
+HEROSMS_API_KEY = "你的HeroSMS_API_KEY"
 os.environ["HEROSMS_API_KEY"] = HEROSMS_API_KEY
 
 print("配置已加载")
