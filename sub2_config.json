@@ -1,8 +1,8 @@
 {
   "sub2api": {
     "url": "https://ai.zhidexiu.com",
-    "email": "ppu281285@gmail.com",
-    "password": "kuan0709",
+    "email": "你的Sub2_邮箱",
+    "password": "你的Sub2_密码",
     "default_group": "chatgpt1"
   }
 }
