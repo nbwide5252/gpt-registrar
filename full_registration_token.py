@@ -1,3 +1,4 @@
+import os
 """
 完整OpenAI注册+获取Token
 全新手写版本，支持多平台SMS和Token保存
