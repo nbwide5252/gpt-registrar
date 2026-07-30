@@ -1,0 +1,21 @@
+{
+  "sms_providers": {
+    "smsbower": {
+      "enabled": true,
+      "api_key": "9AiBnSQODren2WY4NfbBjdEoNqmlaLRS",
+      "service_code": "dr",
+      "priority": 1
+    },
+    "herosms": {
+      "enabled": true,
+      "api_key": "ee2bA63d5e68f88c2bcbcA90e62bcf68",
+      "service_code": "dr",
+      "priority": 2
+    }
+  },
+  "sms_service_code": "dr",
+  "auto_switch": true,
+  "max_attempts_per_provider": 3,
+  "max_price": 0.0288,
+  "price_filter_enabled": true
+}

@@ -1,0 +1,21 @@
+version: "3.8"
+services:
+  gpt:
+    build: .
+    container_name: gpt-registrar
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=0
+    volumes:
+      - ./outputs:/app/outputs
+      - ./logs:/app/logs
+      - ./sms_providers_config.json:/app/sms_providers_config.json
+      - ./sub2_config.json:/app/sub2_config.json
+    environment:
+      - TZ=Asia/Shanghai
+      - PYTHONUNBUFFERED=1

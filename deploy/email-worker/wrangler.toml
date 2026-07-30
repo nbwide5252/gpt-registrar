@@ -1,0 +1,29 @@
+# ================================================================
+# zhidexiu.com 域名邮箱 Worker - Wrangler 配置
+# ================================================================
+# 部署步骤:
+#   1. npm install -g wrangler
+#   2. wrangler login
+#   3. wrangler kv:namespace create ZHDX_MAIL
+#   4. 把输出的 id 填入下面 kv_namespaces.id
+#   5. wrangler deploy
+# ================================================================
+
+name = "zhidexiu-mail"
+main = "worker.js"
+compatibility_date = "2025-04-01"
+
+# KV 存储空间
+[[kv_namespaces]]
+binding = "MAIL_KV"
+id = "你的KV_NAMESPACE_ID"    # ← 运行 wrangler kv:namespace create ZHDX_MAIL 后替换
+
+# 绑定域名 - 用于 Email Routing 接收邮件
+# 需要在 Cloudflare Dashboard → Email → Email Routing 中设置
+# 将 zhidexiu.com 的所有邮件转发到这个 Worker
+[[routes]]
+pattern = "api.zhidexiu.com"
+zone_id = "你的ZONE_ID"        # ← Cloudflare Dashboard 中 zhidexiu.com 的 Zone ID
+
+# 或者不绑定路由，直接用 Worker 自带的 *.workers.dev 域名
+# workers.dev 域名: https://zhidexiu-mail.你的子域名.workers.dev

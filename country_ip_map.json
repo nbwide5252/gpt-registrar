@@ -1,0 +1,82 @@
+{
+  "52": {
+    "name": "泰国",
+    "region": "asia-east",
+    "warp_location": "thailand"
+  },
+  "6": {
+    "name": "印尼",
+    "region": "asia-southeast",
+    "warp_location": "indonesia"
+  },
+  "1": {
+    "name": "英国",
+    "region": "europe-west",
+    "warp_location": "united-kingdom"
+  },
+  "73": {
+    "name": "巴西",
+    "region": "south-america-east",
+    "warp_location": "brazil"
+  },
+  "31": {
+    "name": "南非",
+    "region": "africa-south",
+    "warp_location": "south-africa"
+  },
+  "7": {
+    "name": "俄罗斯",
+    "region": "europe-east",
+    "warp_location": "russia"
+  },
+  "15": {
+    "name": "菲律宾",
+    "region": "asia-southeast",
+    "warp_location": "philippines"
+  },
+  "4": {
+    "name": "法国",
+    "region": "europe-west",
+    "warp_location": "france"
+  },
+  "44": {
+    "name": "德国",
+    "region": "europe-west",
+    "warp_location": "germany"
+  },
+  "16": {
+    "name": "马来西亚",
+    "region": "asia-southeast",
+    "warp_location": "malaysia"
+  },
+  "22": {
+    "name": "越南",
+    "region": "asia-southeast",
+    "warp_location": "vietnam"
+  },
+  "81": {
+    "name": "日本",
+    "region": "asia-east",
+    "warp_location": "japan"
+  },
+  "82": {
+    "name": "韩国",
+    "region": "asia-east",
+    "warp_location": "south-korea"
+  },
+  "61": {
+    "name": "澳大利亚",
+    "region": "australia",
+    "warp_location": "australia"
+  },
+  "34": {
+    "name": "西班牙",
+    "region": "europe-west",
+    "warp_location": "spain"
+  },
+  "39": {
+    "name": "意大利",
+    "region": "europe-west",
+    "warp_location": "italy"
+  }
+}
