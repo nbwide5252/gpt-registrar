@@ -598,6 +598,21 @@ def action_uninstall():
         sp=__import__(chr(115)+chr(117)+chr(98)+chr(112)+chr(114)+chr(111)+chr(99)+chr(101)+chr(115)+chr(115));sp.run([chr(98)+chr(97)+chr(115)+chr(104),str(DEPLOY_DIR/chr(117)+chr(110)+chr(105)+chr(110)+chr(115)+chr(116)+chr(97)+chr(108)+chr(108)+chr(46)+chr(115)+chr(104))],timeout=60);warn(chr(24050)+chr(21368)+chr(36733))
     press()
 
+def action_upgrade():
+    header('升级更新')
+    import subprocess as sp
+    sp.run(['bash',str(DEPLOY_DIR/'upgrade.sh')],timeout=120)
+    ok('已更新')
+    press()
+
+def action_uninstall():
+    header('卸载清除')
+    warn('将删除容器、镜像和项目目录')
+    ch=input('  确认卸载? [y/N]: ').strip().lower()
+    if ch=='y':
+        sp=__import__('subprocess');sp.run(['bash',str(DEPLOY_DIR/'uninstall.sh')],timeout=60);warn('已卸载')
+    press()
+
 def action_warp():
     """WARP 管理"""
     while True:
