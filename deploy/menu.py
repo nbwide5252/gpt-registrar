@@ -138,24 +138,6 @@ def select_sub2_group():
         ok("Sub2 配置已保存")
         return {"url": url, "email": email, "password": password, "group": default_group}
 
-    print("  Sub2: " + url + "  分组: " + default_group)
-    ch = input("  更改分组? [y/N]: ").strip().lower()
-    if ch == "y":
-        groups = list_sub2_groups(url, email, password)
-        if groups:
-            print("  可用分组:")
-            for i, g in enumerate(groups, 1):
-                print("    " + str(i) + ". " + g.get("name", "ID:" + str(g.get("id","?"))))
-            idx2 = input("  编号 (Enter=保持): ").strip()
-            if idx2 and idx2.isdigit():
-                i3 = int(idx2) - 1
-                if 0 <= i3 < len(groups):
-                    default_group = groups[i3].get("name", default_group)
-        else:
-            c2 = input("  输入分组名: ").strip()
-            if c2: default_group = c2
-
-    return {"url": url, "email": email, "password": password, "group": default_group}
 def auto_set_warp_location(country_code):
     """根据接码国家自动匹配 IP 地区"""
     import json as _j
