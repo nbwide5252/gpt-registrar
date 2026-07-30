@@ -2,13 +2,13 @@
   "sms_providers": {
     "smsbower": {
       "enabled": true,
-      "api_key": "9AiBnSQODren2WY4NfbBjdEoNqmlaLRS",
+      "api_key": "你的SMSBower_API_KEY",
       "service_code": "dr",
       "priority": 1
     },
     "herosms": {
       "enabled": true,
-      "api_key": "ee2bA63d5e68f88c2bcbcA90e62bcf68",
+      "api_key": "你的HeroSMS_API_KEY",
       "service_code": "dr",
       "priority": 2
     }
